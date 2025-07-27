@@ -1,0 +1,41 @@
+[project]
+name = "ckanext-dcat-be-napits"
+version = "0.0.1"
+description = ""
+readme = "README.md"
+authors = [
+    {name = ""}
+]
+license = {text = "AGPL"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+
+keywords = [ "CKAN", ]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com//ckanext-dcat-be-napits"
+
+[project.entry-points."ckan.plugins"]
+dcat_be_napits = "ckanext.dcat_be_napits.plugin:DCATBeNAPITSPlugin"
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+        "ignore::sqlalchemy.exc.SADeprecationWarning",
+        "ignore::sqlalchemy.exc.SAWarning",
+        "ignore::DeprecationWarning",
+]
+addopts = "--ckan-ini test.ini"
+
+[project.entry-points."ckan.rdf.profiles"]
+euro_mobility_dcat_ap = "ckanext.dcat_be_napits.profiles:EuropeanMobilityDCATAPProfile"

@@ -1,0 +1,14 @@
+# dcat-be-napits-js:
+#   filter: rjsmin
+#   output: ckanext-dcat-be-napits/%(version)s-dcat-be-napits.js
+#   contents:
+#     - js/dcat-be-napits.js
+#   extra:
+#     preload:
+#       - base/main
+
+# dcat-be-napits-css:
+#   filter: cssrewrite
+#   output: ckanext-dcat-be-napits/%(version)s-dcat-be-napits.css
+#   contents:
+#     - css/dcat-be-napits.css
