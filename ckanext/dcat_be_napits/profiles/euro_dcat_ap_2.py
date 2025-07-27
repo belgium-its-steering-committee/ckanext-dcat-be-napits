@@ -63,6 +63,17 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
                 fluent_multilang[lang] = val
         return fluent_multilang
 
+    def _clean_empty_multilang_strings(self):
+        """
+        Our db multilang fields are all preset with empty strings (unsure if feature or bug).
+        Upstream CKAN DCAT doesn't check for empty strings in multilang fields (https://github.com/ckan/ckanext-dcat/blob/dd3b1e8deaea92d8a789e3227882203a47ce650f/ckanext/dcat/profiles/base.py#L1086)
+        clean up empty strings in RDF here
+        """
+        locales = ['en', 'nl', 'fr', 'de'] # TODO: get this from config
+        for locale in locales:
+            for subject, predicate, object in self.g.triples((None, None, Literal("", lang=locale))):
+                self.g.remove((subject, predicate, object))
+
     def graph_from_dataset(self, dataset_dict, dataset_ref):
 
         super(EuropeanDCATAP2Profile, self).graph_from_dataset(dataset_dict, dataset_ref)
@@ -109,5 +120,6 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             self.g.remove((subject, predicate, object))
             self.g.add((subject, DCAT.bbox, object))
 
+        self._clean_empty_multilang_strings()
 
         return

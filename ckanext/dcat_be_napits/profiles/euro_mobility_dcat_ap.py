@@ -173,4 +173,6 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             self.g.add((location, SKOS.inScheme, URIRef("https://publications.europa.eu/resource/authority/country")))
             self.g.add((location, DCT.identifier, URIRef(country)))
 
+        self._clean_empty_multilang_strings()
+
         return
