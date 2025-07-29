@@ -176,3 +176,11 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         self._clean_empty_multilang_strings()
 
         return
+
+    def graph_from_catalog_record(self, dataset_dict, catalog_record_ref, dataset_ref):
+        super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog_record(dataset_dict, catalog_record_ref, dataset_ref)
+
+        items =[
+            ('metadata_created', DCT.created, None, Literal),
+        ]
+        self._add_date_triples_from_dict(dataset_dict, catalog_record_ref, items)

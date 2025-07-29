@@ -25,6 +25,7 @@ from ckanext.dcat.profiles.base import (
     GEOJSON_IMT,
 )
 from ckanext.dcat.profiles.euro_dcat_ap_2 import EuropeanDCATAP2Profile as CkanEuropeanDCATAP2Profile
+from ckanext.dcat_be_napits.utils import catalog_record_uri
 
 ORG = Namespace("http://www.w3.org/ns/org#")
 
@@ -123,3 +124,46 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         self._clean_empty_multilang_strings()
 
         return
+
+    def _dataset_languages(self, dataset_dict):
+        """
+        Method for determinine the languages used in dataset *metadata*
+        """
+        key = 'notes_translated' #  We use the available languages for dataset description as metric
+        langmap = {
+            'en': 'http://publications.europa.eu/resource/authority/language/ENG',
+            'nl': 'http://publications.europa.eu/resource/authority/language/NLD',
+            'fr': 'http://publications.europa.eu/resource/authority/language/FRA',
+            'de': 'http://publications.europa.eu/resource/authority/language/DEU'
+        }
+        languages = []
+        for lang, value in dataset_dict[key].items():
+            if value:
+                languages.append(langmap[lang])
+        return languages
+
+    def graph_from_catalog_record(self, dataset_dict, catalog_record_ref, dataset_ref):
+        # TODO: Handling addition of dcat:CatalogRecord's should probably be done in the serializer.
+        # analyze if it is possible to extend serializer in extension
+        # https://github.com/ckan/ckanext-dcat/blob/dd3b1e8deaea92d8a789e3227882203a47ce650f/ckanext/dcat/processors.py#L355
+        # since we don't have access to dataset_dict's here, the catalog records are pre-generated
+
+        g = self.g
+
+        if not catalog_record_ref:
+            catalog_record_ref = CleanedURIRef(catalog_record_uri(dataset_dict))
+
+        for prefix, namespace in namespaces.items():
+            g.bind(prefix, namespace)
+
+        g.add((catalog_record_ref, RDF.type, DCAT.CatalogRecord))
+        g.add((catalog_record_ref, FOAF.primaryTopic, dataset_ref))
+        # TODO: inherited method sets dct:modified with metadata_modified too
+        # This might be semanctically incorrect, as this should pertain to the content of the dataset
+        items =[
+            ('metadata_created', DCT.created, None, Literal),
+            ('metadata_modified', DCT.modified, None, Literal),
+        ]
+        self._add_date_triples_from_dict(dataset_dict, catalog_record_ref, items)
+        for lang in self._dataset_languages(dataset_dict):
+            g.add((URIRef(catalog_record_ref), FOAF.language, URIRef(lang)))
