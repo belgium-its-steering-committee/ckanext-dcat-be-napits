@@ -25,7 +25,7 @@ from ckanext.dcat.profiles.base import (
     GEOJSON_IMT,
 )
 from ckanext.dcat.profiles.euro_dcat_ap_2 import EuropeanDCATAP2Profile as CkanEuropeanDCATAP2Profile
-from ckanext.dcat_be_napits.utils import catalog_record_uri
+from ckanext.dcat_be_napits.utils import catalog_record_uri, publisher_uri_organization_fallback
 
 ORG = Namespace("http://www.w3.org/ns/org#")
 
@@ -76,7 +76,6 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
                 self.g.remove((subject, predicate, object))
 
     def graph_from_dataset(self, dataset_dict, dataset_ref):
-
         super(EuropeanDCATAP2Profile, self).graph_from_dataset(dataset_dict, dataset_ref)
 
         for prefix, namespace in namespaces.items():
@@ -141,6 +140,21 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             if value:
                 languages.append(langmap[lang])
         return languages
+
+    def graph_from_catalog(self, catalog_dict, catalog_ref):
+        super(EuropeanDCATAP2Profile, self).graph_from_catalog(catalog_dict, catalog_ref)
+
+        # TODO: DCT.description should come from ckan.site_description config.
+        # TODO: DCT.language uses locale default, which is "en", this can be improved
+        # TODO: DCAT.record: CatalogRecord for the Catalog
+
+        # Add NGI as Catalog publisher
+        # If we want transportdata email address instead, then we'll have to duplicate this entity
+        NGI_ID = "82e1025c-4db4-4a9c-95f6-e474db508f3f"
+        ngi_dict = toolkit.get_action('organization_show')({}, {'id': NGI_ID})
+        dataset_dict = {'organization': ngi_dict}
+        ngi_uri = CleanedURIRef(publisher_uri_organization_fallback(dataset_dict))
+        self.g.add((catalog_ref, DCT.publisher, ngi_uri))
 
     def graph_from_catalog_record(self, dataset_dict, catalog_record_ref, dataset_ref):
         # TODO: Handling addition of dcat:CatalogRecord's should probably be done in the serializer.
