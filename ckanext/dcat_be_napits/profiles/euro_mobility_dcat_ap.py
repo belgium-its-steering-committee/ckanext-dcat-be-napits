@@ -73,8 +73,8 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             self.g.bind(prefix, namespace)
 
 
-        org_id = dataset_dict.get('organization', {}).get('id')
-        org_dict = toolkit.get_action('organization_show')({}, {'id': org_id})
+        org_id = dataset_dict["organization"]["id"]
+        org_dict = self._org_cache[org_id]
 
         #check if dcat2 already introduced one publisher
         existing_publishers = self.g.objects(dataset_ref, DCT.publisher)
@@ -100,7 +100,7 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         org_dict['display_title'] = self._suffix_to_fluent_multilang(org_dict, 'display_title', ['en', 'nl', 'fr', 'de'])
         self._add_triple_from_dict(org_dict, org, FOAF.name, 'display_title')
 
-        org_address = BNode()
+        org_address = CleanedURIRef(publisher_uri_organization_address(dataset_dict))
         self.g.add((org_address, RDF.type, LOCN.Address))
         self.g.add((publisher_details, LOCN.address, org_address))
 
