@@ -26,6 +26,7 @@ from ckanext.dcat.profiles.base import (
     GEOJSON_IMT,
 )
 from .euro_dcat_ap_2 import EuropeanDCATAP2Profile
+from ckanext.dcat_be_napits.utils import publisher_uri_organization_address
 
 MOBILITYDCATAP = Namespace("https://w3id.org/mobilitydcat-ap#")
 ORG = Namespace("http://www.w3.org/ns/org#")
