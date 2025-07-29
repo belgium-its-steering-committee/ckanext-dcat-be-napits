@@ -25,15 +25,18 @@ from ckanext.dcat.profiles.base import (
     SPDX,
     GEOJSON_IMT,
 )
+from ckanext.dcat.utils import resource_uri
 from .euro_dcat_ap_2 import EuropeanDCATAP2Profile
 from ckanext.dcat_be_napits.utils import publisher_uri_organization_address
 
 MOBILITYDCATAP = Namespace("https://w3id.org/mobilitydcat-ap#")
 ORG = Namespace("http://www.w3.org/ns/org#")
+CNT = Namespace("http://www.w3.org/2011/content#")
 
 namespaces = {
     "mobilitydcatap": MOBILITYDCATAP,
     "org": ORG,
+    "cnt": CNT,
 }
 
 
@@ -173,6 +176,15 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             self.g.add((location, RDF.type, DCT.Location))
             self.g.add((location, SKOS.inScheme, URIRef("https://publications.europa.eu/resource/authority/country")))
             self.g.add((location, DCT.identifier, URIRef(country)))
+
+        for resource_dict in dataset_dict.get("resources", []):
+            distribution_ref = CleanedURIRef(resource_uri(resource_dict))
+            items =[
+                ('acc_int', MOBILITYDCATAP.applicationLayerProtocol, None, URIRef),
+                ('acc_mod', MOBILITYDCATAP.mobilityDataStandard, None, URIRef),
+                ('acc_enc', CNT.characterEncoding, None, Literal),
+            ]
+            self._add_triples_from_dict(resource_dict, distribution_ref, items)
 
         self._clean_empty_multilang_strings()
 
