@@ -33,6 +33,13 @@ namespaces = {
     "org": ORG,
 }
 
+SUPPORTED_LANGUAGES_MAP = {
+    'en': 'http://publications.europa.eu/resource/authority/language/ENG',
+    'nl': 'http://publications.europa.eu/resource/authority/language/NLD',
+    'fr': 'http://publications.europa.eu/resource/authority/language/FRA',
+    'de': 'http://publications.europa.eu/resource/authority/language/DEU'
+}
+
 class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
     """
     Some elements don't get converted correctly by ckan dcat upstream.
@@ -129,24 +136,25 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         Method for determinine the languages used in dataset *metadata*
         """
         key = 'notes_translated' #  We use the available languages for dataset description as metric
-        langmap = {
-            'en': 'http://publications.europa.eu/resource/authority/language/ENG',
-            'nl': 'http://publications.europa.eu/resource/authority/language/NLD',
-            'fr': 'http://publications.europa.eu/resource/authority/language/FRA',
-            'de': 'http://publications.europa.eu/resource/authority/language/DEU'
-        }
         languages = []
         for lang, value in dataset_dict[key].items():
             if value:
-                languages.append(langmap[lang])
+                languages.append(SUPPORTED_LANGUAGES_MAP[lang])
         return languages
 
     def graph_from_catalog(self, catalog_dict, catalog_ref):
         super(EuropeanDCATAP2Profile, self).graph_from_catalog(catalog_dict, catalog_ref)
 
         # TODO: DCT.description should come from ckan.site_description config.
-        # TODO: DCT.language uses locale default, which is "en", this can be improved
         # TODO: DCAT.record: CatalogRecord for the Catalog
+
+        # DCT.language uses locale default, which is "en". Should be dct:LinguisticSystem controlled voc
+        # language used in the user interface of the mobility data portal
+        for lang in self.g.objects(catalog_ref, DCT.language):
+            self.g.remove((catalog_ref, DCT.language, lang))
+        for lang in SUPPORTED_LANGUAGES_MAP.values():
+            self.g.add((catalog_ref, DCT.language, URIRef(lang)))
+            self.g.add((URIRef(lang), RDF.type, DCT.LinguisticSystem))
 
         # Add NGI as Catalog publisher
         # If we want transportdata email address instead, then we'll have to duplicate this entity
