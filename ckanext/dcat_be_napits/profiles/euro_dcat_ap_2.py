@@ -92,7 +92,7 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             ('contact_point_tel', VCARD.tel, None, Literal),
         ]
         self._add_triples_from_dict(dataset_dict, contact_point, items)
-        self.g.add((contact_point, VCARD.hasEmail, URIRef(self._add_mailto(dataset_dict['contact_point_email']))))
+        self._add_triple_from_dict(dataset_dict, contact_point, VCARD.hasEmail, 'contact_point_email', _type=URIRef, value_modifier=self._add_mailto)
 
         for dcat_distribution in self._distributions(dataset_ref):
             # TODO what to do with license info at dataset level vs distribution level. DCAT only has distribution level.
