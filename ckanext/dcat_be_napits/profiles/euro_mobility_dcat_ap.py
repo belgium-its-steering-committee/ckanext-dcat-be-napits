@@ -77,33 +77,24 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         org_id = dataset_dict["organization"]["id"]
         org_dict = self._org_cache[org_id]
 
-        #check if dcat2 already introduced one publisher
-        existing_publishers = self.g.objects(dataset_ref, DCT.publisher)
-        if existing_publishers:
-            publisher_details = next(existing_publishers)
-        else:
-            publisher_uri = self._get_dataset_value(dataset_dict, 'publisher_uri')
-            if publisher_uri:
-                publisher_details = CleanedURIRef(publisher_uri)
-            else:
-                publisher_details = BNode()
+        # dcat2 already introduces org as publisher
+        org_ref = next(self.g.objects(dataset_ref, DCT.publisher))
 
-        org = publisher_details # reuses entity created by inherited dcat class
-        self.g.add((org, RDF.type, FOAF.Agent))
-        self.g.add((org, RDF.type, FOAF.Organization))
+        self.g.add((org_ref, RDF.type, FOAF.Agent))
+        self.g.add((org_ref, RDF.type, FOAF.Organization))
         items =[
             ('title', FOAF.name, None, Literal),
             ('do_tel', FOAF.phone, None, Literal),
             ('do_website', FOAF.workplaceHomepage, None, URIRef),
         ]
-        self._add_triples_from_dict(org_dict, org, items)
-        self.g.add((org, FOAF.mbox, URIRef(self._add_mailto(org_dict['do_email']))))
+        self._add_triples_from_dict(org_dict, org_ref, items)
+        self.g.add((org_ref, FOAF.mbox, URIRef(self._add_mailto(org_dict['do_email']))))
         org_dict['display_title'] = self._suffix_to_fluent_multilang(org_dict, 'display_title', ['en', 'nl', 'fr', 'de'])
-        self._add_triple_from_dict(org_dict, org, FOAF.name, 'display_title')
+        self._add_triple_from_dict(org_dict, org_ref, FOAF.name, 'display_title')
 
         org_address = CleanedURIRef(publisher_uri_organization_address(dataset_dict))
         self.g.add((org_address, RDF.type, LOCN.Address))
-        self.g.add((publisher_details, LOCN.address, org_address))
+        self.g.add((org_ref, LOCN.address, org_address))
 
         items =[
             ('country', LOCN.adminUnitL1, None, Literal),
@@ -117,7 +108,6 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         publisher_person = BNode()
         self.g.add((publisher_person, RDF.type, FOAF.Agent))
         self.g.add((publisher_person, RDF.type, FOAF.Person))
-        self.g.add((dataset_ref, DCT.publisher, publisher_person))
 
         publisher_name = f"{dataset_dict['publisher_firstname']} {dataset_dict['publisher_surname']}".strip()
         self.g.add((publisher_person, FOAF.name, Literal(publisher_name)))
@@ -126,8 +116,12 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             ('publisher_surname', FOAF.surname, None, Literal),
         ]
         self._add_triples_from_dict(dataset_dict, publisher_person, items)
-        self.g.add((publisher_person, ORG.memberOf, org))
 
+        # Cardinality for dct:publisher is 1..1
+        # Detach org as publisher, make person publisher and make person member of org
+        self.g.add((dataset_ref, DCT.publisher, publisher_person))
+        self.g.remove((dataset_ref, DCT.publisher, org_ref))
+        self.g.add((publisher_person, ORG.memberOf, org_ref))
 
         if 'mobility_theme' in dataset_dict:
             hierarchic_themes = json.loads(dataset_dict['mobility_theme'])
