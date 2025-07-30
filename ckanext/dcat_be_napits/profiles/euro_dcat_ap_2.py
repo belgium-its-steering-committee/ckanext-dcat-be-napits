@@ -59,8 +59,7 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         Upstream CKAN DCAT doesn't check for empty strings in multilang fields (https://github.com/ckan/ckanext-dcat/blob/dd3b1e8deaea92d8a789e3227882203a47ce650f/ckanext/dcat/profiles/base.py#L1086)
         clean up empty strings in RDF here
         """
-        locales = ['en', 'nl', 'fr', 'de'] # TODO: get this from config
-        for locale in locales:
+        for locale in SUPPORTED_LANGUAGES_MAP.keys():
             for subject, predicate, object in self.g.triples((None, None, Literal("", lang=locale))):
                 self.g.remove((subject, predicate, object))
 
