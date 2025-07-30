@@ -168,4 +168,4 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             g.bind(prefix, namespace)
 
         for lang in self._dataset_languages(dataset_dict):
-            g.add((URIRef(catalog_record_ref), FOAF.language, URIRef(lang)))
+            g.add((URIRef(catalog_record_ref), DCT.language, URIRef(lang)))
