@@ -169,3 +169,4 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
 
         for lang in self._dataset_languages(dataset_dict):
             g.add((URIRef(catalog_record_ref), DCT.language, URIRef(lang)))
+            g.add((URIRef(lang), RDF.type, DCT.LinguisticSystem))
