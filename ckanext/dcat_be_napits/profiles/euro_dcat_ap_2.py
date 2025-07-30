@@ -40,12 +40,33 @@ SUPPORTED_LANGUAGES_MAP = {
     'de': 'http://publications.europa.eu/resource/authority/language/DEU'
 }
 
+PREFIX_TEL = "tel:"
+
 class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
     """
     Some elements don't get converted correctly by ckan dcat upstream.
     Probably because of some custom modelling in transportdata ckan.
     Correct them here
     """
+
+    def _add_tel(self, tel):
+        """
+        Ensures that the phone number has an URIRef-compatible tel: prefix.
+        Can be used as modifier function for `_add_triple_from_dict`.
+        """
+        if tel:
+            return PREFIX_TEL + self._without_tel(tel)
+        else:
+            return tel
+
+    def _without_tel(self, tel):
+        """
+        Ensures that the phone number string has no tel: prefix.
+        """
+        if tel:
+            return str(tel).replace(PREFIX_TEL, "")
+        else:
+            return tel
 
     def _clean_empty_multilang_strings(self):
         """
@@ -71,10 +92,10 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
 
         items =[
             ('contact_point_name', VCARD.fn, None, Literal),
-            ('contact_point_tel', VCARD.tel, None, Literal),
         ]
         self._add_triples_from_dict(dataset_dict, contact_point, items)
         self._add_triple_from_dict(dataset_dict, contact_point, VCARD.hasEmail, 'contact_point_email', _type=URIRef, value_modifier=self._add_mailto)
+        self._add_triple_from_dict(dataset_dict, contact_point, VCARD.hasTelephone, 'contact_point_tel', _type=URIRef, value_modifier=self._add_tel)
 
         for dcat_distribution in self._distributions(dataset_ref):
             # TODO what to do with license info at dataset level vs distribution level. DCAT only has distribution level.

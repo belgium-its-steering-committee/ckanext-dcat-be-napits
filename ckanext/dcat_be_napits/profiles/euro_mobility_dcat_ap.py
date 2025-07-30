@@ -84,11 +84,11 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         self.g.add((org_ref, RDF.type, FOAF.Organization))
         items =[
             ('title', FOAF.name, None, Literal),
-            ('do_tel', FOAF.phone, None, Literal),
             ('do_website', FOAF.workplaceHomepage, None, URIRef),
         ]
         self._add_triples_from_dict(org_dict, org_ref, items)
         self.g.add((org_ref, FOAF.mbox, URIRef(self._add_mailto(org_dict['do_email']))))
+        self.g.add((org_ref, FOAF.phone, URIRef(self._add_tel(org_dict['do_tel']))))
         org_dict['display_title'] = self._suffix_to_fluent_multilang(org_dict, 'display_title', ['en', 'nl', 'fr', 'de'])
         self._add_triple_from_dict(org_dict, org_ref, FOAF.name, 'display_title')
 
