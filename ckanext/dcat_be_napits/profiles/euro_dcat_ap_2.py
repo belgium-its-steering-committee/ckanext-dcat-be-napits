@@ -105,7 +105,6 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             self.g.add((license_document, RDF.type, DCT.LicenseDocument))
             self.g.add((dcat_distribution, DCT.license, license_document))
             self._add_triple_from_dict(distribution, license_document, DCT.identifier, 'license_type', _type=URIRef) # Mobilitydcat specific
-            # TODO: remove empty values for multilang until upstream dcat fixed
             self._add_triple_from_dict(distribution, license_document, RDFS.label, 'license_text_translated')
 
         for dcat_distribution in self._distributions(dataset_ref):
@@ -142,7 +141,6 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         super(EuropeanDCATAP2Profile, self).graph_from_catalog(catalog_dict, catalog_ref)
 
         # TODO: DCT.description should come from ckan.site_description config.
-        # TODO: DCAT.record: CatalogRecord for the Catalog
 
         # DCT.language uses locale default, which is "en". Should be dct:LinguisticSystem controlled voc
         # language used in the user interface of the mobility data portal
