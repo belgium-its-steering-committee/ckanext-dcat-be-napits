@@ -53,24 +53,6 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         )
         return dataset_dict
 
-    def _suffix_to_fluent_multilang(self, dataset_dict, key, languages):
-        """
-        'display_title_de': 'Nationales Geographisches Institut',
-        'display_title_en': 'National Geographic Institute ',
-        to
-        {
-            'de': 'Nationales Geographisches Institut',
-            'en': 'National Geographic Institute '
-        }
-        """
-        fluent_multilang = {}
-        for lang in languages:
-            suffix_key = f"{key}_{lang}"
-            val = dataset_dict.get(suffix_key)
-            if val:
-                fluent_multilang[lang] = val
-        return fluent_multilang
-
     def _clean_empty_multilang_strings(self):
         """
         Our db multilang fields are all preset with empty strings (unsure if feature or bug).
