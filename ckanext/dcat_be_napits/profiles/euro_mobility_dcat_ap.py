@@ -39,6 +39,9 @@ namespaces = {
     "cnt": CNT,
 }
 
+EURO_SCHEME_URI_NUTS = "http://data.europa.eu/nuts"
+EURO_SCHEME_URI_COUNTRY = "http://publications.europa.eu/resource/authority/country"
+CONCEPT_URI_BEL = "http://publications.europa.eu/resource/authority/country/BEL"
 
 class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
     """
@@ -157,18 +160,17 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
                 location = BNode()
                 self.g.add((dataset_ref, DCT.spatial, location))
                 self.g.add((location, RDF.type, DCT.Location))
-                self.g.add((location, SKOS.inScheme, URIRef("http://data.europa.eu/nuts")))
+                self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_NUTS)))
                 self.g.add((location, DCT.identifier, URIRef(region)))
 
         for country in dataset_dict['countries_covered']:
-            BEL = "http://publications.europa.eu/resource/authority/country/BEL"
-            if country == BEL and len(dataset_dict['regions_covered']) != 3:
+            if country == CONCEPT_URI_BEL and len(dataset_dict['regions_covered']) != 3:
                 # only add belgium if regions covered is no more specific
                 continue
             location = BNode()
             self.g.add((dataset_ref, DCT.spatial, location))
             self.g.add((location, RDF.type, DCT.Location))
-            self.g.add((location, SKOS.inScheme, URIRef("https://publications.europa.eu/resource/authority/country")))
+            self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_COUNTRY)))
             self.g.add((location, DCT.identifier, URIRef(country)))
 
         for resource_dict in dataset_dict.get("resources", []):
@@ -187,12 +189,11 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
     def graph_from_catalog(self, catalog_dict, catalog_ref):
         super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog(catalog_dict, catalog_ref)
 
-        BEL = "http://publications.europa.eu/resource/authority/country/BEL"
         location = BNode()
         self.g.add((catalog_ref, DCT.spatial, location))
         self.g.add((location, RDF.type, DCT.Location))
-        self.g.add((location, SKOS.inScheme, URIRef("https://publications.europa.eu/resource/authority/country")))
-        self.g.add((location, DCT.identifier, URIRef(BEL)))
+        self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_COUNTRY)))
+        self.g.add((location, DCT.identifier, URIRef(CONCEPT_URI_BEL)))
 
     def graph_from_catalog_record(self, dataset_dict, catalog_record_ref, dataset_ref):
         super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog_record(dataset_dict, catalog_record_ref, dataset_ref)
