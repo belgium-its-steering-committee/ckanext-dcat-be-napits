@@ -139,28 +139,12 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         ngi_uri = CleanedURIRef(publisher_uri_organization_fallback(dataset_dict))
         self.g.add((catalog_ref, DCT.publisher, ngi_uri))
 
-    def graph_from_catalog_record(self, dataset_dict, catalog_record_ref, dataset_ref):
-        # TODO: Handling addition of dcat:CatalogRecord's should probably be done in the serializer.
-        # analyze if it is possible to extend serializer in extension
-        # https://github.com/ckan/ckanext-dcat/blob/dd3b1e8deaea92d8a789e3227882203a47ce650f/ckanext/dcat/processors.py#L355
-        # since we don't have access to dataset_dict's here, the catalog records are pre-generated
-
+    def graph_from_catalog_record(self, dataset_dict, dataset_ref, catalog_record_ref):
+        super(EuropeanDCATAP2Profile, self).graph_from_catalog_record(dataset_dict, dataset_ref, catalog_record_ref)
         g = self.g
-
-        if not catalog_record_ref:
-            catalog_record_ref = CleanedURIRef(catalog_record_uri(dataset_dict))
 
         for prefix, namespace in namespaces.items():
             g.bind(prefix, namespace)
 
-        g.add((catalog_record_ref, RDF.type, DCAT.CatalogRecord))
-        g.add((catalog_record_ref, FOAF.primaryTopic, dataset_ref))
-        # TODO: inherited method sets dct:modified with metadata_modified too
-        # This might be semanctically incorrect, as this should pertain to the content of the dataset
-        items =[
-            ('metadata_created', DCT.created, None, Literal),
-            ('metadata_modified', DCT.modified, None, Literal),
-        ]
-        self._add_date_triples_from_dict(dataset_dict, catalog_record_ref, items)
         for lang in self._dataset_languages(dataset_dict):
             g.add((URIRef(catalog_record_ref), FOAF.language, URIRef(lang)))

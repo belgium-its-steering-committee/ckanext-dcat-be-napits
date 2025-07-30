@@ -195,8 +195,8 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_COUNTRY)))
         self.g.add((location, DCT.identifier, URIRef(CONCEPT_URI_BEL)))
 
-    def graph_from_catalog_record(self, dataset_dict, catalog_record_ref, dataset_ref):
-        super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog_record(dataset_dict, catalog_record_ref, dataset_ref)
+    def graph_from_catalog_record(self, dataset_dict, dataset_ref, catalog_record_ref):
+        super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog_record(dataset_dict, dataset_ref, catalog_record_ref)
 
         items =[
             ('metadata_created', DCT.created, None, Literal),
