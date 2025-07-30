@@ -45,12 +45,6 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
 https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
     """
 
-    def parse_dataset(self, dataset_dict, dataset_ref):
-        dataset_dict = super(EuropeanMobilityDCATAPProfile, self).parse_dataset(
-            dataset_dict, dataset_ref
-        )
-        return dataset_dict
-
     def _suffix_to_fluent_multilang(self, dataset_dict, key, languages):
         """
         'display_title_de': 'Nationales Geographisches Institut',

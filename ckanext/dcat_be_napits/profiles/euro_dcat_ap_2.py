@@ -47,12 +47,6 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
     Correct them here
     """
 
-    def parse_dataset(self, dataset_dict, dataset_ref):
-        dataset_dict = super(EuropeanDCATAP2Profile, self).parse_dataset(
-            dataset_dict, dataset_ref
-        )
-        return dataset_dict
-
     def _clean_empty_multilang_strings(self):
         """
         Our db multilang fields are all preset with empty strings (unsure if feature or bug).
