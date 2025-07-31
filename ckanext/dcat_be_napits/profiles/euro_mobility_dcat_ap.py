@@ -171,7 +171,10 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             distribution_ref = CleanedURIRef(resource_uri(resource_dict))
             items =[
                 ('acc_int', MOBILITYDCATAP.applicationLayerProtocol, None, URIRef),
+                ('acc_con', MOBILITYDCATAP.communicationMethod, None, URIRef),
+                ('acc_gra', MOBILITYDCATAP.grammar, None, URIRef),
                 ('acc_mod', MOBILITYDCATAP.mobilityDataStandard, None, URIRef),
+                ('acc_desc', MOBILITYDCATAP.dataFormatNotes, None, Literal),
                 ('acc_enc', CNT.characterEncoding, None, Literal),
             ]
             self._add_triples_from_dict(resource_dict, distribution_ref, items)
