@@ -1,83 +1,43 @@
-[![Tests](https://github.com//ckanext-dcat-be-napits/workflows/Tests/badge.svg?branch=main)](https://github.com//ckanext-dcat-be-napits/actions)
+[![Tests](https://github.com/belgium-its-steering-committee/ckanext-dcat-be-napits/workflows/Tests/badge.svg?branch=main)](https://github.com/belgium-its-steering-committee/ckanext-dcat-be-napits/actions)
 
 # ckanext-dcat-be-napits
 
-**TODO:** Put a description of your extension here:  What does it do? What features does it have? Consider including some screenshots or embedding a video!
+A CKAN extension implementing the DCAT requirements of [app-transportdata](https://github.com/belgium-its-steering-committee/app-transportdata). Extends [ckanext-dcat](https://github.com/ckan/ckanext-dcat/). This extension does mainly 2 things:
+- Adapt the DCAT-AP2 profile inherited from ckanext-dcat to fit app-transportdata's custom datamodel
+- Implement [MobilityDCAT-AP](https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html)
 
+This extension currently requires [a fork](https://github.com/belgium-its-steering-committee/ckanext-dcat) of `ckanext-dcat`. This is because the MobilityDCAT-AP spec makes `dcat:CatalogRecord` mandatory and the upstream DCAT extension doesn't support this feature yet. A [PR proposing this feature upstream](https://github.com/ckan/ckanext-dcat/pull/353) has been made.
 
 ## Requirements
-
-**TODO:** For example, you might want to mention here which versions of CKAN this
-extension works with.
-
-If your extension works across different versions you can add the following table:
 
 Compatibility with core CKAN versions:
 
 | CKAN version    | Compatible?   |
 | --------------- | ------------- |
-| 2.6 and earlier | not tested    |
-| 2.7             | not tested    |
-| 2.8             | not tested    |
-| 2.9             | not tested    |
-
-Suggested values:
-
-* "yes"
-* "not tested" - I can't think of a reason why it wouldn't work
-* "not yet" - there is an intention to get it working
-* "no"
-
-
-## Installation
-
-**TODO:** Add any additional install steps to the list below.
-   For example installing any non-Python dependencies or adding any required
-   config settings.
-
-To install ckanext-dcat-be-napits:
-
-1. Activate your CKAN virtual environment, for example:
-
-     . /usr/lib/ckan/default/bin/activate
-
-2. Clone the source and install it on the virtualenv
-
-    git clone https://github.com//ckanext-dcat-be-napits.git
-    cd ckanext-dcat-be-napits
-    pip install -e .
-	pip install -r requirements.txt
-
-3. Add `dcat-be-napits` to the `ckan.plugins` setting in your CKAN
-   config file (by default the config file is located at
-   `/etc/ckan/default/ckan.ini`).
-
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
-
-     sudo service apache2 reload
+| 2.9 and earlier | no            |
+| 2.10            | not tested    |
+| 2.11            | yes           |
 
 
 ## Config settings
 
-None at present
+The extension defines the DCAT profiles that it publishes in [pyproject.toml](/pyproject.toml) under `[project.entry-points."ckan.rdf.profiles"]`. Currently available profiles are:
+- `euro_mobility_dcat_ap`
 
-**TODO:** Document any optional config settings here. For example:
+In order to make this profile the default, configure the following in the project `.env`:
 
-	# The minimum number of hours to wait before re-checking a resource
-	# (optional, default: 24).
-	ckanext.dcat_be_napits.some_setting = some_default_value
+```
+CKANEXT__DCAT__RDF__PROFILES=euro_mobility_dcat_ap
+```
 
 
 ## Developer installation
 
-To install ckanext-dcat-be-napits for development, activate your CKAN virtualenv and
-do:
+- Move this extension repo folder into `app-transportdata/src`
+- Use the `bin/compose` development setup there
+- Run `bin/install_src`
 
-    git clone https://github.com//ckanext-dcat-be-napits.git
-    cd ckanext-dcat-be-napits
-    pip install -e .
-    pip install -r dev-requirements.txt
-
+Live code reloading should now be active.
 
 ## Tests
 
