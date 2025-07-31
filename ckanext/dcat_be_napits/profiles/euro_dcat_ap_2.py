@@ -24,7 +24,10 @@ from ckanext.dcat.profiles.base import (
     SPDX,
     GEOJSON_IMT,
 )
+
+from ckanext.dcat.utils import resource_uri
 from ckanext.dcat.profiles.euro_dcat_ap_2 import EuropeanDCATAP2Profile as CkanEuropeanDCATAP2Profile
+
 from ckanext.dcat_be_napits.utils import catalog_record_uri, publisher_uri_organization_fallback
 
 ORG = Namespace("http://www.w3.org/ns/org#")
@@ -68,6 +71,12 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         else:
             return tel
 
+    def _clean_license_type_uri(self, uri):
+        # https://github.com/belgium-its-steering-committee/ckanext-benap/blob/00b38cdacf4efd44a2556048098a92dda0dfe7ad/ckanext/benap/helpers/lists.py#L1194
+        if uri.startswith("http"):
+            return uri
+        return None
+
     def _clean_empty_multilang_strings(self):
         """
         Our db multilang fields are all preset with empty strings (unsure if feature or bug).
@@ -97,24 +106,30 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         self._add_triple_from_dict(dataset_dict, contact_point, VCARD.hasEmail, 'contact_point_email', _type=URIRef, value_modifier=self._add_mailto)
         self._add_triple_from_dict(dataset_dict, contact_point, VCARD.hasTelephone, 'contact_point_tel', _type=URIRef, value_modifier=self._add_tel)
 
-        for dcat_distribution in self._distributions(dataset_ref):
-            # TODO what to do with license info at dataset level vs distribution level. DCAT only has distribution level.
-            # example: https://transportdata.be/api/3/action/package_show?id=address-points-belgium-best-address
-            distribution = dataset_dict['resources'][0]
-            license_document = BNode()
-            self.g.add((license_document, RDF.type, DCT.LicenseDocument))
-            self.g.add((dcat_distribution, DCT.license, license_document))
-            self._add_triple_from_dict(distribution, license_document, DCT.identifier, 'license_type', _type=URIRef) # Mobilitydcat specific
-            self._add_triple_from_dict(distribution, license_document, RDFS.label, 'license_text_translated')
+        # TODO what to do with license info at dataset level vs distribution level. DCAT only has distribution level.
+        # example: https://transportdata.be/api/3/action/package_show?id=address-points-belgium-best-address
+        for resource_dict in dataset_dict.get("resources", []):
+            distribution_ref = CleanedURIRef(resource_uri(resource_dict))
 
-        for dcat_distribution in self._distributions(dataset_ref):
-            distribution = dataset_dict['resources'][0]
+            if resource_dict.get('license_type') or any(resource_dict.get('license_text_translated').values()):
+                license_document = BNode()
+                self.g.add((license_document, RDF.type, DCT.LicenseDocument))
+                self.g.add((distribution_ref, DCT.license, license_document))
+                items =[
+                    ('license_text_translated', RDFS.label, None, URIRef),
+                ]
+                self._add_triples_from_dict(resource_dict, license_document, items)
+                self._add_triple_from_dict(resource_dict, license_document, DCT.type, 'license_type', _type=URIRef, value_modifier=self._clean_license_type_uri)
+
             rights_statement = BNode()
             self.g.add((rights_statement, RDF.type, DCT.RightsStatement))
-            self.g.add((dcat_distribution, DCT.rights, rights_statement))
-            self._add_triple_from_dict(distribution, rights_statement, DCT.type, 'conditions_access', _type=URIRef) # Mobilitydcat specific
-            self._add_triple_from_dict(distribution, rights_statement, DCT.type, 'conditions_usage', _type=URIRef) # Mobilitydcat specific
-            self._add_triple_from_dict(distribution, rights_statement, RDFS.label, 'additional_info_access_usage_translated') # Mobilitydcat specific
+            self.g.add((distribution_ref, DCT.rights, rights_statement))
+            items =[
+                ('conditions_access', DCT.type, None, URIRef),
+                ('conditions_usage', DCT.type, None, URIRef),
+                ('additional_info_access_usage_translated', RDFS.label, None, Literal),
+            ]
+            self._add_triples_from_dict(resource_dict, rights_statement, items)
 
         # Fix inherited location: is bounding box, not geometry
         # TODO: make filter more specific
