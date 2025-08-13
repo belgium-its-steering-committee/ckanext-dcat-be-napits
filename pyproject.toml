@@ -1,6 +1,6 @@
 [project]
 name = "ckanext-dcat-be-napits"
-version = "0.0.1"
+version = "0.1.0"
 description = ""
 readme = "README.md"
 authors = [
@@ -19,7 +19,7 @@ keywords = [ "CKAN", ]
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com//ckanext-dcat-be-napits"
+Homepage = "https://github.com/belgium-its-steering-committee/ckanext-dcat-be-napits"
 
 [project.entry-points."ckan.plugins"]
 dcat_be_napits = "ckanext.dcat_be_napits.plugin:DCATBeNAPITSPlugin"
