@@ -118,9 +118,8 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         self._add_triples_from_dict(dataset_dict, publisher_person, items)
 
         # Cardinality for dct:publisher is 1..1
-        # Detach org as publisher, make person publisher and make person member of org
-        self.g.add((dataset_ref, DCT.publisher, publisher_person))
-        self.g.remove((dataset_ref, DCT.publisher, org_ref))
+        # Connect publishing person to publishing org as org:memberOf
+        # https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html#agent-roles
         self.g.add((publisher_person, ORG.memberOf, org_ref))
 
         if 'mobility_theme' in dataset_dict:
