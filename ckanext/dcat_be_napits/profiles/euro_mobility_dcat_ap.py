@@ -136,8 +136,8 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             # semantic meaning is transportation mode
             self._add_triple_from_dict(dataset_dict, dataset_ref, MOBILITYDCATAP.transportMode, 'fluent_tags', list_value=True, _type=URIRef)
 
-        if 'network_coverage' in dataset_dict:
-            # Always a list with only 1 item (that in turn contains the real list ...)
+        if 'network_coverage' in dataset_dict and len(dataset_dict['network_coverage']):
+            # Empty list, or list with only 1 item (that in turn contains the real list ...)
             # TODO: fix strip once data serialization is fixed at source
             network_coverage = dataset_dict['network_coverage'][0].strip("{}")
             # TODO: 2 elements in prod DB have double mustache nesting. Those are considered broken data. Migrate those out
