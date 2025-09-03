@@ -32,11 +32,17 @@ from ckanext.dcat_be_napits.utils import publisher_uri_organization_address
 MOBILITYDCATAP = Namespace("https://w3id.org/mobilitydcat-ap#")
 ORG = Namespace("http://www.w3.org/ns/org#")
 CNT = Namespace("http://www.w3.org/2011/content#")
+OA = Namespace("https://www.w3.org/ns/oa#")
+DC = Namespace("http://purl.org/dc/elements/1.1/")
+DQV = Namespace("http://www.w3.org/ns/dqv#")
 
 namespaces = {
     "mobilitydcatap": MOBILITYDCATAP,
     "org": ORG,
     "cnt": CNT,
+    "oa": OA,
+    "dc": DC,
+    "dqv": DQV,
 }
 
 EURO_SCHEME_URI_NUTS = "http://data.europa.eu/nuts"
@@ -147,6 +153,40 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         if 'georeferencing_method' in dataset_dict:
             self._add_triple_from_dict(dataset_dict, dataset_ref, MOBILITYDCATAP.georeferencingMethod, 'georeferencing_method', list_value=True, _type=URIRef)
 
+        if 'nap_type' in dataset_dict:
+            # TODO: Literal. Should be skos:Concept (ELI identifier)
+            self._add_triple_from_dict(dataset_dict, dataset_ref, DCATAP.applicableLegislation, 'nap_type', list_value=True, _type=Literal)
+
+        if 'reference_system' in dataset_dict:
+            # Somewhat unexpected interpretation of dct:conformsTo by MobilityDCAT, but according to spec
+            self._add_triple_from_dict(dataset_dict, dataset_ref, DCT.conformsTo, 'reference_system', list_value=True, _type=URIRef)
+
+        if 'nap_checked' in dataset_dict and dataset_dict['nap_checked'] is True:
+            assessment = BNode()
+            self.g.add((assessment, RDF.type, MOBILITYDCATAP.Assessment))
+            body = BNode()
+            self.g.add((body, RDF.type, OA.TextualBody))
+            self.g.add((body, RDF.value, Literal("metadata checked and verified")))
+            self.g.add((body, DC["format"], Literal("text/plain")))
+            self.g.add((body, DC.language, Literal("en")))
+
+            self.g.add((assessment, OA.hasBody, body))
+            self.g.add((dataset_ref, MOBILITYDCATAP.assessmentResult, assessment))
+
+        if 'qual_ass_translated' in dataset_dict:
+            for lang, val in dataset_dict['qual_ass_translated'].items():
+                if not val:
+                    continue
+                quality_annotation = BNode()
+                self.g.add((quality_annotation, RDF.type, DQV.QualityAnnotation))
+                self.g.add((dataset_ref, DQV.hasQualityAnnotation, quality_annotation))
+                body = BNode()
+                self.g.add((body, RDF.type, OA.TextualBody))
+                self.g.add((body, RDF.value, Literal(val)))
+                self.g.add((body, DC["format"], Literal("text/plain")))
+                self.g.add((body, DC.language, Literal(lang)))
+                self.g.add((quality_annotation, OA.hasBody, body))
+
         # Only if it adds specificity, not if all belgian regions are covered
         if len(dataset_dict['regions_covered']) != 3:
             for region in dataset_dict['regions_covered']:
@@ -175,7 +215,11 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
                 ('acc_mod', MOBILITYDCATAP.mobilityDataStandard, None, URIRef),
                 ('acc_desc', MOBILITYDCATAP.dataFormatNotes, None, Literal),
                 ('acc_enc', CNT.characterEncoding, None, Literal),
+                ('description_resource_translated', DCT.description, None, Literal),
             ]
+            if resource_dict['url_type'] == 'upload':
+                items.append(('url', DCAT.downloadURL, None, URIRef))
+
             self._add_triples_from_dict(resource_dict, distribution_ref, items)
 
         self._clean_empty_multilang_strings()

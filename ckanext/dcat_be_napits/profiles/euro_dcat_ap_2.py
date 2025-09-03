@@ -1,3 +1,5 @@
+from datetime import date
+
 from rdflib import Literal, URIRef, BNode
 from rdflib.namespace import Namespace
 
@@ -155,7 +157,8 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
     def graph_from_catalog(self, catalog_dict, catalog_ref):
         super(EuropeanDCATAP2Profile, self).graph_from_catalog(catalog_dict, catalog_ref)
 
-        # TODO: DCT.description should come from ckan.site_description config.
+        # TODO: from upstream, DCT.description should come from ckan.site_description config.
+        self.g.add((catalog_ref, DCT.description, Literal("Transportdata.be is the national access point for all mobility related data in Belgium.", lang="en")))
 
         # DCT.language uses locale default, which is "en". Should be dct:LinguisticSystem controlled voc
         # language used in the user interface of the mobility data portal
@@ -172,6 +175,15 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
         dataset_dict = {'organization': ngi_dict}
         ngi_uri = CleanedURIRef(publisher_uri_organization_fallback(dataset_dict))
         self.g.add((catalog_ref, DCT.publisher, ngi_uri))
+
+        license_document = BNode()
+        self.g.add((license_document, RDF.type, DCT.LicenseDocument))
+        self.g.add((license_document, DCT.type, URIRef("http://publications.europa.eu/resource/authority/licence/CC0")))
+        self.g.add((catalog_ref, DCT.license, license_document))
+
+        self.g.add((catalog_ref, DCT.issued, Literal(date(2020, 2, 14))))
+
+        self.g.add((catalog_ref, DCAT.themeTaxonomy, URIRef("http://publications.europa.eu/resource/authority/data-theme")))
 
     def graph_from_catalog_record(self, dataset_dict, dataset_ref, catalog_record_ref):
         super(EuropeanDCATAP2Profile, self).graph_from_catalog_record(dataset_dict, dataset_ref, catalog_record_ref)
