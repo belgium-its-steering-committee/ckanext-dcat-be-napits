@@ -141,6 +141,9 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
 
         self._clean_empty_multilang_strings()
 
+        # from pprint import pprint
+        # pprint(dataset_dict)
+
         return
 
     def _dataset_languages(self, dataset_dict):
