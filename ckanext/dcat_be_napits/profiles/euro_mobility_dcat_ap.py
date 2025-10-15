@@ -160,18 +160,6 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             # Somewhat unexpected interpretation of dct:conformsTo by MobilityDCAT, but according to spec
             self._add_triple_from_dict(dataset_dict, dataset_ref, DCT.conformsTo, 'reference_system', list_value=True, _type=URIRef)
 
-        if 'nap_checked' in dataset_dict and dataset_dict['nap_checked'] is True:
-            assessment = BNode()
-            self.g.add((assessment, RDF.type, MOBILITYDCATAP.Assessment))
-            body = BNode()
-            self.g.add((body, RDF.type, OA.TextualBody))
-            self.g.add((body, RDF.value, Literal("metadata checked and verified")))
-            self.g.add((body, DC["format"], Literal("text/plain")))
-            self.g.add((body, DC.language, Literal("en")))
-
-            self.g.add((assessment, OA.hasBody, body))
-            self.g.add((dataset_ref, MOBILITYDCATAP.assessmentResult, assessment))
-
         if 'qual_ass_translated' in dataset_dict:
             for lang, val in dataset_dict['qual_ass_translated'].items():
                 if not val:
