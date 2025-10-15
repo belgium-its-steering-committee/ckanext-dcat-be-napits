@@ -131,11 +131,10 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         if 'mobility_theme' in dataset_dict:
             hierarchic_themes = json.loads(dataset_dict['mobility_theme'])
             for broader_theme, narrower_themes in hierarchic_themes.items():
+                self.g.add((dataset_ref, MOBILITYDCATAP.mobilityTheme, CleanedURIRef(broader_theme)))
                 if narrower_themes:
                     for theme in narrower_themes:
                         self._add_list_triple(dataset_ref, MOBILITYDCATAP.mobilityTheme, theme, URIRefOrLiteral)
-                else:
-                    self.g.add((dataset_ref, MOBILITYDCATAP.mobilityTheme, CleanedURIRef(broader_theme)))
 
         if 'fluent_tags' in dataset_dict:
             # TODO: adapt once nonsensical key-name has been changed.
