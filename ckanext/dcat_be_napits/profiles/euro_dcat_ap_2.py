@@ -1,6 +1,6 @@
 from datetime import date
 
-from rdflib import Literal, URIRef, BNode
+from rdflib import Literal, URIRef, BNode, Graph
 from rdflib.namespace import Namespace
 
 import ckantoolkit as toolkit
@@ -27,7 +27,7 @@ from ckanext.dcat.profiles.base import (
     GEOJSON_IMT,
 )
 
-from ckanext.dcat.utils import resource_uri
+from ckanext.dcat.utils import resource_uri, catalog_uri
 from ckanext.dcat.profiles.euro_dcat_ap_2 import EuropeanDCATAP2Profile as CkanEuropeanDCATAP2Profile
 
 from ckanext.dcat_be_napits.utils import catalog_record_uri, publisher_uri_organization_fallback
@@ -157,6 +157,25 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
                 languages.append(SUPPORTED_LANGUAGES_MAP[lang])
         return languages
 
+    def _generate_ngi_catalog_publisher(self):
+        """
+        Referencing the existing CKAN NGI org as DCAT catalog publisher would be close,
+        but "NGI" is not exactly the desired wording. To be more precise, it is "NGI on behalf of benap ..."
+        Therefore we generate a new entity representing that here.
+        We can reuse the NGI address though.
+        """
+        catalog_pub_graph = Graph()
+        catalog_pub_uuid = "6df0157c-6022-408f-8c7d-991b9c79466f"  # no reference in DB. Just hardcoded here.
+        uri = '{0}/organization/{1}'.format(catalog_uri().rstrip('/'),
+                                            catalog_pub_uuid)
+        name = Literal("The Belgian National Geographic Institute on behalf of the Belgian ITS steering committee", lang="en")
+        catalog_pub = catalog_pub_graph.resource(uri)
+        catalog_pub.add(RDF.type, FOAF.Organization)
+        catalog_pub.add(FOAF.name, name)
+        catalog_pub.add(LOCN.address, URIRef("https://transportdata.be/organization/82e1025c-4db4-4a9c-95f6-e474db508f3f/address"))
+        catalog_pub.add(FOAF.mbox, URIRef("mailto:contact@transportdata.be"))
+        return catalog_pub_graph, catalog_pub
+
     def graph_from_catalog(self, catalog_dict, catalog_ref):
         super(EuropeanDCATAP2Profile, self).graph_from_catalog(catalog_dict, catalog_ref)
 
@@ -171,13 +190,11 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             self.g.add((catalog_ref, DCT.language, URIRef(lang)))
             self.g.add((URIRef(lang), RDF.type, DCT.LinguisticSystem))
 
-        # Add NGI as Catalog publisher
-        # If we want transportdata email address instead, then we'll have to duplicate this entity
-        NGI_ID = "82e1025c-4db4-4a9c-95f6-e474db508f3f"
-        ngi_dict = toolkit.get_action('organization_show')({}, {'id': NGI_ID})
-        dataset_dict = {'organization': ngi_dict}
-        ngi_uri = CleanedURIRef(publisher_uri_organization_fallback(dataset_dict))
-        self.g.add((catalog_ref, DCT.publisher, ngi_uri))
+        # Add Catalog publisher
+        ngi_its_graph, ngi_its = self._generate_ngi_catalog_publisher()
+        for triple in ngi_its_graph:
+            self.g.add(triple)
+        self.g.add((catalog_ref, DCT.publisher, ngi_its.identifier))
 
         license_document = BNode()
         self.g.add((license_document, RDF.type, DCT.LicenseDocument))
