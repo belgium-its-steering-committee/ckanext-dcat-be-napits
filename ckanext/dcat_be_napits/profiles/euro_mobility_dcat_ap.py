@@ -187,19 +187,14 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
                 self.g.add((body, DC.language, Literal(lang)))
                 self.g.add((quality_annotation, OA.hasBody, body))
 
-        # Only if it adds specificity, not if all belgian regions are covered
-        if len(dataset_dict['regions_covered']) != 3:
-            for region in dataset_dict['regions_covered']:
-                location = BNode()
-                self.g.add((dataset_ref, DCT.spatial, location))
-                self.g.add((location, RDF.type, DCT.Location))
-                self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_NUTS)))
-                self.g.add((location, DCT.identifier, URIRef(region)))
+        for region in dataset_dict['regions_covered']:
+            location = BNode()
+            self.g.add((dataset_ref, DCT.spatial, location))
+            self.g.add((location, RDF.type, DCT.Location))
+            self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_NUTS)))
+            self.g.add((location, DCT.identifier, URIRef(region)))
 
         for country in dataset_dict['countries_covered']:
-            if country == CONCEPT_URI_BEL and len(dataset_dict['regions_covered']) != 3:
-                # only add belgium if regions covered is no more specific
-                continue
             location = BNode()
             self.g.add((dataset_ref, DCT.spatial, location))
             self.g.add((location, RDF.type, DCT.Location))
