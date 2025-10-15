@@ -188,7 +188,6 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             self.g.remove((catalog_ref, DCT.language, lang))
         for lang in SUPPORTED_LANGUAGES_MAP.values():
             self.g.add((catalog_ref, DCT.language, URIRef(lang)))
-            self.g.add((URIRef(lang), RDF.type, DCT.LinguisticSystem))
 
         # Add Catalog publisher
         ngi_its_graph, ngi_its = self._generate_ngi_catalog_publisher()
@@ -214,4 +213,3 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
 
         for lang in self._dataset_languages(dataset_dict):
             g.add((URIRef(catalog_record_ref), DCT.language, URIRef(lang)))
-            g.add((URIRef(lang), RDF.type, DCT.LinguisticSystem))

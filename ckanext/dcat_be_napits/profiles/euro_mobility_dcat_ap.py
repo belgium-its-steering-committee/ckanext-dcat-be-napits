@@ -86,7 +86,6 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         # dcat2 already introduces org as publisher
         org_ref = next(self.g.objects(dataset_ref, DCT.publisher))
 
-        self.g.add((org_ref, RDF.type, FOAF.Agent))
         self.g.add((org_ref, RDF.type, FOAF.Organization))
         items =[
             ('title', FOAF.name, None, Literal),
@@ -112,7 +111,6 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         self._add_triples_from_dict(org_dict, org_address, items)
 
         publisher_person = BNode()
-        self.g.add((publisher_person, RDF.type, FOAF.Agent))
         self.g.add((publisher_person, RDF.type, FOAF.Person))
 
         publisher_name = f"{dataset_dict['publisher_firstname']} {dataset_dict['publisher_surname']}".strip()
