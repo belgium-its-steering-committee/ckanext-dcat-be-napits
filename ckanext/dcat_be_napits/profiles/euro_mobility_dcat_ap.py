@@ -72,6 +72,20 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
                 fluent_multilang[lang] = val
         return fluent_multilang
 
+    def _fix_epsg_uri(self, uris):
+        """
+        CRS URI's with https scheme should have http scheme instead
+        TODO: needs fixing in source data, but is patched here
+        """
+        fixed_uris = []
+        for uri in uris:
+            if uri.startswith("https://www.opengis.net/def/crs/EPSG"):
+                fixed_uri = uri.replace("https://", "http://")
+                fixed_uris.append(fixed_uri)
+            else:
+                fixed_uris.append(uri)
+        return fixed_uris
+
     def graph_from_dataset(self, dataset_dict, dataset_ref):
 
         super(EuropeanMobilityDCATAPProfile, self).graph_from_dataset(dataset_dict, dataset_ref)
@@ -160,7 +174,7 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
 
         if 'reference_system' in dataset_dict:
             # Somewhat unexpected interpretation of dct:conformsTo by MobilityDCAT, but according to spec
-            self._add_triple_from_dict(dataset_dict, dataset_ref, DCT.conformsTo, 'reference_system', list_value=True, _type=URIRef)
+            self._add_triple_from_dict(dataset_dict, dataset_ref, DCT.conformsTo, 'reference_system', list_value=True, _type=URIRef, value_modifier=self._fix_epsg_uri)
 
         if 'qual_ass_translated' in dataset_dict:
             for lang, val in dataset_dict['qual_ass_translated'].items():
