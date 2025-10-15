@@ -128,6 +128,10 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         # https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html#agent-roles
         self.g.add((publisher_person, ORG.memberOf, org_ref))
 
+        # MobilityDCAT specified to remove dcat:keyword
+        for subject, predicate, _object in self.g.triples((dataset_ref, DCAT.keyword, None)):
+            self.g.remove((subject, predicate, _object))
+
         if 'mobility_theme' in dataset_dict:
             hierarchic_themes = json.loads(dataset_dict['mobility_theme'])
             for broader_theme, narrower_themes in hierarchic_themes.items():
@@ -203,6 +207,14 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
                 items.append(('url', DCAT.downloadURL, None, URIRef))
 
             self._add_triples_from_dict(resource_dict, distribution_ref, items)
+
+            # MobilityDCAT specifies to remove these
+            for subject, predicate, _object in self.g.triples((distribution_ref, DCAT.byteSize, None)):
+                self.g.remove((subject, predicate, _object))
+            for subject, predicate, _object in self.g.triples((distribution_ref, DCAT.mediaType, None)):
+                self.g.remove((subject, predicate, _object))
+
+
 
         self._clean_empty_multilang_strings()
 
