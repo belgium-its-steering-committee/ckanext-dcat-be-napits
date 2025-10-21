@@ -197,12 +197,9 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
             self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_NUTS)))
             self.g.add((location, DCT.identifier, URIRef(region)))
 
-        for country in dataset_dict['countries_covered']:
-            location = BNode()
-            self.g.add((dataset_ref, DCT.spatial, location))
-            self.g.add((location, RDF.type, DCT.Location))
-            self.g.add((location, SKOS.inScheme, URIRef(EURO_SCHEME_URI_COUNTRY)))
-            self.g.add((location, DCT.identifier, URIRef(country)))
+        # dataset_dict['countries_covered'] not included in dct:spatial
+        # Handling of international organizations/datasets for all delegated
+        # regulations (MMTIS, RTTI, SRTI, SSTP) needs clearing out.
 
         for resource_dict in dataset_dict.get("resources", []):
             distribution_ref = CleanedURIRef(resource_uri(resource_dict))
