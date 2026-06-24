@@ -49,10 +49,142 @@ EURO_SCHEME_URI_NUTS = "http://data.europa.eu/nuts"
 EURO_SCHEME_URI_COUNTRY = "http://publications.europa.eu/resource/authority/country"
 CONCEPT_URI_BEL = "http://publications.europa.eu/resource/authority/country/BEL"
 
+
 class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
     """
-https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
+    https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
     """
+
+    def parse_dataset(self, dataset_dict, dataset_ref):
+        dataset_dict = super().parse_dataset(dataset_dict, dataset_ref)
+
+        # TODO: Hard Coded
+        for key, value in (
+            ("agreement_declaration_nap", ["Y"]),
+            ("cont_res", "Data set"),
+            ("countries_covered", [CONCEPT_URI_BEL]),
+            ("nap_type", (
+                "MMTIS",
+                "RTTI",
+                "SRTI",
+                "SSTP",
+            )),
+            ("regions_covered", ["http://data.europa.eu/nuts/code/BE2"]),
+
+            ("publisher_firstname", "NOT HARVESTED publisher_firstname"),
+            ("publisher_surname", "NOT HARVESTED publisher_lastname"),
+            ("theme", "http://publications.europa.eu/resource/authority/data-theme/TRAN")
+        ):
+            self._set_dataset_value(
+                dataset_dict, key, value
+            )
+
+        # Standard values
+        for key, predicate in (
+            ("frequency", DCT.accrualPeriodicity),
+            ("language", DCT.language),
+        ):
+            value = self._object_value(dataset_ref, predicate)
+            if value:
+                self._set_dataset_value(dataset_dict, key, value)
+
+        # Lists
+        for key, predicate in (
+            ("fluent_tags", MOBILITYDCATAP.transportMode),
+        ):
+            self._set_dataset_value(
+                dataset_dict, key,
+                ",".join(self._object_value_list(
+                    dataset_ref, predicate
+                ))
+            )
+
+
+        self._set_list_dataset_value(
+            dataset_dict,
+            "mobility_theme",
+            {
+                "https://w3id.org/mobilitydcat-ap/mobility-theme/sharing-and-hiring-services": self._object_value_list(
+                    dataset_ref, MOBILITYDCATAP.mobilityTheme
+                )
+            },
+        )
+
+        # breakpoint()
+        #
+        # Date fields
+        if temporal_start := self._get_dict_value(dataset_dict, 'temporal_start'):
+            dataset_dict['temporal_start'] = temporal_start + 'T00:00:00Z'
+        if temporal_end := self._get_dict_value(dataset_dict, 'temporal_end'):
+            dataset_dict['temporal_end'] = temporal_end + 'T00:00:00Z'
+
+        # [?] nap_type
+        # [X] mobility_theme
+        # [X] cont_res
+        # [ ] owner_org
+        # [X] contact_point_tel
+        # [ ] publisher_firstname
+        # [ ] publisher_surname
+        # [ ] publisher_url
+        # [ ] publisher_telephone_number
+        # [ ] countries_covered
+        # [ ] regions_covered
+        # [ ] network_coverage
+        # [ ] reference_system
+        # [ ] georeferencing_method
+        # [X] fluent_tags
+        # [ ] qual_ass_translated
+
+        # Resources
+        for distribution in self._distributions(dataset_ref):
+            distribution_ref = str(distribution)
+            for resource_dict in dataset_dict.get("resources", []):
+                # Match distribution in graph and distribution in resource dict
+                if resource_dict and distribution_ref == resource_dict.get(
+                    "distribution_ref"
+                ):
+                    # TODO: Hard Coded
+                    resource_dict['format'] = "http://publications.europa.eu/resource/authority/file-type/XML"
+
+
+                    resource_dict['issued'] = self._get_dict_value(resource_dict, 'issued') + 'T00:00:00Z'
+                    resource_dict['modified'] = self._get_dict_value(resource_dict, 'modified') + 'T00:00:00Z'
+
+                    # # License Documents
+                    # license_documents = self.g.objects(distribution, DCT.license)
+
+                    # [license_document] = license_documents
+                    # resource_dict["license_text_translated"] = (
+                    #     self._object_value_multilingual(license_document, RDFS.label)
+                    # )
+
+                    for key, predicate in (
+                        ("acc_mod", MOBILITYDCATAP.mobilityDataStandard),
+                        ("acc_int", MOBILITYDCATAP.applicationLayerProtocol),
+                    ):
+                        value = self._object_value(distribution, predicate)
+                        if value:
+                            resource_dict[key] = value
+
+                    rights = [
+                        type
+                        for right in self.g.objects(URIRef(distribution_ref), DCT.rights)
+                        for type in self.g.objects(right, DCT.type)
+                    ]
+
+                    # TODO: Hard Coded
+                    resource_dict ["conditions_access"] = 'https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/fee-required'
+                    resource_dict ["conditions_usage"] = 'https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/contractual-arrangement'
+
+        # dataset_dict["resources"] = []
+
+        dataset_dict['extras'] = [
+            entry
+            for entry in dataset_dict['extras']
+            if entry['key'] not in map((lambda f: f['field_name']), self._dataset_schema['dataset_fields'])
+        ]
+
+        return dataset_dict
 
     def _suffix_to_fluent_multilang(self, dataset_dict, key, languages):
         """
@@ -87,12 +219,12 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         return fixed_uris
 
     def graph_from_dataset(self, dataset_dict, dataset_ref):
-
-        super(EuropeanMobilityDCATAPProfile, self).graph_from_dataset(dataset_dict, dataset_ref)
+        super(EuropeanMobilityDCATAPProfile, self).graph_from_dataset(
+            dataset_dict, dataset_ref
+        )
 
         for prefix, namespace in namespaces.items():
             self.g.bind(prefix, namespace)
-
 
         org_id = dataset_dict["organization"]["id"]
         org_dict = self._org_cache[org_id]
@@ -101,26 +233,28 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         org_ref = next(self.g.objects(dataset_ref, DCT.publisher))
 
         self.g.add((org_ref, RDF.type, FOAF.Organization))
-        items =[
-            ('title', FOAF.name, None, Literal),
-            ('do_website', FOAF.workplaceHomepage, None, URIRef),
+        items = [
+            ("title", FOAF.name, None, Literal),
+            ("do_website", FOAF.workplaceHomepage, None, URIRef),
         ]
         self._add_triples_from_dict(org_dict, org_ref, items)
-        self.g.add((org_ref, FOAF.mbox, URIRef(self._add_mailto(org_dict['do_email']))))
-        self.g.add((org_ref, FOAF.phone, URIRef(self._add_tel(org_dict['do_tel']))))
-        org_dict['display_title'] = self._suffix_to_fluent_multilang(org_dict, 'display_title', ['en', 'nl', 'fr', 'de'])
-        self._add_triple_from_dict(org_dict, org_ref, FOAF.name, 'display_title')
+        self.g.add((org_ref, FOAF.mbox, URIRef(self._add_mailto(org_dict["do_email"]))))
+        self.g.add((org_ref, FOAF.phone, URIRef(self._add_tel(org_dict["do_tel"]))))
+        org_dict["display_title"] = self._suffix_to_fluent_multilang(
+            org_dict, "display_title", ["en", "nl", "fr", "de"]
+        )
+        self._add_triple_from_dict(org_dict, org_ref, FOAF.name, "display_title")
 
         org_address = CleanedURIRef(publisher_uri_organization_address(dataset_dict))
         self.g.add((org_address, RDF.type, LOCN.Address))
         self.g.add((org_ref, LOCN.address, org_address))
 
-        items =[
-            ('country', LOCN.adminUnitL1, None, Literal),
-            ('administrative_area', LOCN.adminUnitL2, None, Literal),
-            ('postal_code', LOCN.postCode, None, Literal),
-            ('city', LOCN.postName, None, Literal),
-            ('street_address', LOCN.thoroughfare, None, Literal),
+        items = [
+            ("country", LOCN.adminUnitL1, None, Literal),
+            ("administrative_area", LOCN.adminUnitL2, None, Literal),
+            ("postal_code", LOCN.postCode, None, Literal),
+            ("city", LOCN.postName, None, Literal),
+            ("street_address", LOCN.thoroughfare, None, Literal),
         ]
         self._add_triples_from_dict(org_dict, org_address, items)
 
@@ -129,9 +263,9 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
 
         publisher_name = f"{dataset_dict['publisher_firstname']} {dataset_dict['publisher_surname']}".strip()
         self.g.add((publisher_person, FOAF.name, Literal(publisher_name)))
-        items =[
-            ('publisher_firstname', FOAF.firstName, None, Literal),
-            ('publisher_surname', FOAF.surname, None, Literal),
+        items = [
+            ("publisher_firstname", FOAF.firstName, None, Literal),
+            ("publisher_surname", FOAF.surname, None, Literal),
         ]
         self._add_triples_from_dict(dataset_dict, publisher_person, items)
 
@@ -141,43 +275,90 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         self.g.add((publisher_person, ORG.memberOf, org_ref))
 
         # MobilityDCAT specified to remove dcat:keyword
-        for subject, predicate, _object in self.g.triples((dataset_ref, DCAT.keyword, None)):
+        for subject, predicate, _object in self.g.triples(
+            (dataset_ref, DCAT.keyword, None)
+        ):
             self.g.remove((subject, predicate, _object))
 
-        if 'mobility_theme' in dataset_dict:
-            hierarchic_themes = json.loads(dataset_dict['mobility_theme'])
+        if "mobility_theme" in dataset_dict:
+            hierarchic_themes = json.loads(dataset_dict["mobility_theme"])
             for broader_theme, narrower_themes in hierarchic_themes.items():
-                self.g.add((dataset_ref, MOBILITYDCATAP.mobilityTheme, CleanedURIRef(broader_theme)))
+                self.g.add(
+                    (
+                        dataset_ref,
+                        MOBILITYDCATAP.mobilityTheme,
+                        CleanedURIRef(broader_theme),
+                    )
+                )
                 if narrower_themes:
                     for theme in narrower_themes:
-                        self._add_list_triple(dataset_ref, MOBILITYDCATAP.mobilityTheme, theme, URIRefOrLiteral)
+                        self._add_list_triple(
+                            dataset_ref,
+                            MOBILITYDCATAP.mobilityTheme,
+                            theme,
+                            URIRefOrLiteral,
+                        )
 
-        if 'fluent_tags' in dataset_dict:
+        if "fluent_tags" in dataset_dict:
             # TODO: adapt once nonsensical key-name has been changed.
             # semantic meaning is transportation mode
-            self._add_triple_from_dict(dataset_dict, dataset_ref, MOBILITYDCATAP.transportMode, 'fluent_tags', list_value=True, _type=URIRef)
+            self._add_triple_from_dict(
+                dataset_dict,
+                dataset_ref,
+                MOBILITYDCATAP.transportMode,
+                "fluent_tags",
+                list_value=True,
+                _type=URIRef,
+            )
 
-        if 'network_coverage' in dataset_dict and len(dataset_dict['network_coverage']):
+        if "network_coverage" in dataset_dict and len(dataset_dict["network_coverage"]):
             # Empty list, or list with only 1 item (that in turn contains the real list ...)
             # TODO: fix strip once data serialization is fixed at source
-            network_coverage = dataset_dict['network_coverage'][0].strip("{}")
+            network_coverage = dataset_dict["network_coverage"][0].strip("{}")
             # TODO: 2 elements in prod DB have double mustache nesting. Those are considered broken data. Migrate those out
             # _add_list_triple covers legacy comma separated lists
-            self._add_list_triple(dataset_ref, MOBILITYDCATAP.networkCoverage, network_coverage, URIRefOrLiteral)
+            self._add_list_triple(
+                dataset_ref,
+                MOBILITYDCATAP.networkCoverage,
+                network_coverage,
+                URIRefOrLiteral,
+            )
 
-        if 'georeferencing_method' in dataset_dict:
-            self._add_triple_from_dict(dataset_dict, dataset_ref, MOBILITYDCATAP.georeferencingMethod, 'georeferencing_method', list_value=True, _type=URIRef)
+        if "georeferencing_method" in dataset_dict:
+            self._add_triple_from_dict(
+                dataset_dict,
+                dataset_ref,
+                MOBILITYDCATAP.georeferencingMethod,
+                "georeferencing_method",
+                list_value=True,
+                _type=URIRef,
+            )
 
-        if 'nap_type' in dataset_dict:
+        if "nap_type" in dataset_dict:
             # TODO: Literal. Should be skos:Concept (ELI identifier)
-            self._add_triple_from_dict(dataset_dict, dataset_ref, DCATAP.applicableLegislation, 'nap_type', list_value=True, _type=Literal)
+            self._add_triple_from_dict(
+                dataset_dict,
+                dataset_ref,
+                DCATAP.applicableLegislation,
+                "nap_type",
+                list_value=True,
+                _type=Literal,
+            )
 
-        if 'reference_system' in dataset_dict:
+        if "reference_system" in dataset_dict:
             # Somewhat unexpected interpretation of dct:conformsTo by MobilityDCAT, but according to spec
-            self._add_triple_from_dict(dataset_dict, dataset_ref, DCT.conformsTo, 'reference_system', list_value=True, _type=URIRef, value_modifier=self._fix_epsg_uri)
+            self._add_triple_from_dict(
+                dataset_dict,
+                dataset_ref,
+                DCT.conformsTo,
+                "reference_system",
+                list_value=True,
+                _type=URIRef,
+                value_modifier=self._fix_epsg_uri,
+            )
 
-        if 'qual_ass_translated' in dataset_dict:
-            for lang, val in dataset_dict['qual_ass_translated'].items():
+        if "qual_ass_translated" in dataset_dict:
+            for lang, val in dataset_dict["qual_ass_translated"].items():
                 if not val:
                     continue
                 quality_annotation = BNode()
@@ -190,7 +371,7 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
                 self.g.add((body, DC.language, Literal(lang)))
                 self.g.add((quality_annotation, OA.hasBody, body))
 
-        for region in dataset_dict['regions_covered']:
+        for region in dataset_dict["regions_covered"]:
             location = BNode()
             self.g.add((dataset_ref, DCT.spatial, location))
             self.g.add((location, RDF.type, DCT.Location))
@@ -203,34 +384,38 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
 
         for resource_dict in dataset_dict.get("resources", []):
             distribution_ref = CleanedURIRef(resource_uri(resource_dict))
-            items =[
-                ('acc_int', MOBILITYDCATAP.applicationLayerProtocol, None, URIRef),
-                ('acc_con', MOBILITYDCATAP.communicationMethod, None, URIRef),
-                ('acc_gra', MOBILITYDCATAP.grammar, None, URIRef),
-                ('acc_mod', MOBILITYDCATAP.mobilityDataStandard, None, URIRef),
-                ('acc_desc', MOBILITYDCATAP.dataFormatNotes, None, Literal),
-                ('acc_enc', CNT.characterEncoding, None, Literal),
-                ('description_resource_translated', DCT.description, None, Literal),
+            items = [
+                ("acc_int", MOBILITYDCATAP.applicationLayerProtocol, None, URIRef),
+                ("acc_con", MOBILITYDCATAP.communicationMethod, None, URIRef),
+                ("acc_gra", MOBILITYDCATAP.grammar, None, URIRef),
+                ("acc_mod", MOBILITYDCATAP.mobilityDataStandard, None, URIRef),
+                ("acc_desc", MOBILITYDCATAP.dataFormatNotes, None, Literal),
+                ("acc_enc", CNT.characterEncoding, None, Literal),
+                ("description_resource_translated", DCT.description, None, Literal),
             ]
-            if resource_dict['url_type'] == 'upload':
-                items.append(('url', DCAT.downloadURL, None, URIRef))
+            if resource_dict["url_type"] == "upload":
+                items.append(("url", DCAT.downloadURL, None, URIRef))
 
             self._add_triples_from_dict(resource_dict, distribution_ref, items)
 
             # MobilityDCAT specifies to remove these
-            for subject, predicate, _object in self.g.triples((distribution_ref, DCAT.byteSize, None)):
+            for subject, predicate, _object in self.g.triples(
+                (distribution_ref, DCAT.byteSize, None)
+            ):
                 self.g.remove((subject, predicate, _object))
-            for subject, predicate, _object in self.g.triples((distribution_ref, DCAT.mediaType, None)):
+            for subject, predicate, _object in self.g.triples(
+                (distribution_ref, DCAT.mediaType, None)
+            ):
                 self.g.remove((subject, predicate, _object))
-
-
 
         self._clean_empty_multilang_strings()
 
         return
 
     def graph_from_catalog(self, catalog_dict, catalog_ref):
-        super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog(catalog_dict, catalog_ref)
+        super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog(
+            catalog_dict, catalog_ref
+        )
 
         location = BNode()
         self.g.add((catalog_ref, DCT.spatial, location))
@@ -239,9 +424,11 @@ https://mobilitydcat-ap.github.io/mobilityDCAT-AP/releases/index.html
         self.g.add((location, DCT.identifier, URIRef(CONCEPT_URI_BEL)))
 
     def graph_from_catalog_record(self, dataset_dict, dataset_ref, catalog_record_ref):
-        super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog_record(dataset_dict, dataset_ref, catalog_record_ref)
+        super(EuropeanMobilityDCATAPProfile, self).graph_from_catalog_record(
+            dataset_dict, dataset_ref, catalog_record_ref
+        )
 
-        items =[
-            ('metadata_created', DCT.created, None, Literal),
+        items = [
+            ("metadata_created", DCT.created, None, Literal),
         ]
         self._add_date_triples_from_dict(dataset_dict, catalog_record_ref, items)
