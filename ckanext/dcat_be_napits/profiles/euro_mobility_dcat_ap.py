@@ -154,10 +154,6 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                 if resource_dict and distribution_ref == resource_dict.get(
                     "distribution_ref"
                 ):
-                    # TODO: Hard Coded
-                    resource_dict["format"] = (
-                        "http://publications.europa.eu/resource/authority/file-type/XML"
-                    )
 
                     resource_dict["issued"] = (
                         self._get_dict_value(resource_dict, "issued") + "T00:00:00Z"
@@ -178,6 +174,7 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                         ("description_resource_translated", DCT.description, True),
                         ("acc_mod", MOBILITYDCATAP.mobilityDataStandard, False),
                         ("acc_enc", CNT.characterEncoding, False),
+                        ("format", DCT.format, False),
                         ("acc_gra", MOBILITYDCATAP.grammar, False),
                         ("acc_desc", MOBILITYDCATAP.dataFormatNotes, True),
                         ("acc_int", MOBILITYDCATAP.applicationLayerProtocol, False),
