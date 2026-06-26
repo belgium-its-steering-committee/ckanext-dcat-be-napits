@@ -63,21 +63,22 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
             ("agreement_declaration_nap", ["Y"]),
             ("cont_res", "Data set"),
             ("countries_covered", [CONCEPT_URI_BEL]),
-            ("nap_type", (
-                "MMTIS",
-                "RTTI",
-                "SRTI",
-                "SSTP",
-            )),
+            (
+                "nap_type",
+                (
+                    "MMTIS",
+                    "RTTI",
+                    "SRTI",
+                    "SSTP",
+                ),
+            ),
             ("regions_covered", ["http://data.europa.eu/nuts/code/BE2"]),
-
-            # ("publisher_firstname", "NOT HARVESTED publisher_firstname"),
-            # ("publisher_surname", "NOT HARVESTED publisher_lastname"),
-            ("theme", "http://publications.europa.eu/resource/authority/data-theme/TRAN")
+            (
+                "theme",
+                "http://publications.europa.eu/resource/authority/data-theme/TRAN",
+            ),
         ):
-            self._set_dataset_value(
-                dataset_dict, key, value
-            )
+            self._set_dataset_value(dataset_dict, key, value)
 
         # Standard values
         for key, predicate in (
@@ -99,32 +100,33 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                 self._set_dataset_value(dataset_dict, key, value)
 
         # Lists (comma separated)
-        for key, predicate in (
-            ("fluent_tags", MOBILITYDCATAP.transportMode),
-        ):
+        for key, predicate in (("fluent_tags", MOBILITYDCATAP.transportMode),):
             self._set_dataset_value(
-                dataset_dict, key,
-                ",".join(self._object_value_list(
-                    dataset_ref, predicate
-                ))
+                dataset_dict,
+                key,
+                ",".join(self._object_value_list(dataset_ref, predicate)),
             )
 
         # Lists (Array)
-        for (key, predicate) in (
+        for key, predicate in (
             ("mobility_theme", MOBILITYDCATAP.mobilityTheme),
             ("georeferencing_method", MOBILITYDCATAP.georeferencingMethod),
             ("network_coverage", MOBILITYDCATAP.networkCoverage),
         ):
             self._set_dataset_value(
-                dataset_dict, key,
+                dataset_dict,
+                key,
                 self._object_value_list(dataset_ref, predicate),
             )
 
         quality_annotation_ref = self._object(dataset_ref, DQV.hasQualityAnnotation)
         self._set_dataset_value(
-            dataset_dict, "qual_ass_translated",
+            dataset_dict,
+            "qual_ass_translated",
             # self._object_value_multilingual(quality_annotation_ref, OA.hasBody)
-            self._object_value_multilingual(quality_annotation_ref, URIRef('http://www.w3.org/ns/oa#hasBody'))
+            self._object_value_multilingual(
+                quality_annotation_ref, URIRef("http://www.w3.org/ns/oa#hasBody")
+            ),
         )
 
         # [?] nap_type
@@ -153,10 +155,16 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                     "distribution_ref"
                 ):
                     # TODO: Hard Coded
-                    resource_dict['format'] = "http://publications.europa.eu/resource/authority/file-type/XML"
+                    resource_dict["format"] = (
+                        "http://publications.europa.eu/resource/authority/file-type/XML"
+                    )
 
-                    resource_dict['issued'] = self._get_dict_value(resource_dict, 'issued') + 'T00:00:00Z'
-                    resource_dict['modified'] = self._get_dict_value(resource_dict, 'modified') + 'T00:00:00Z'
+                    resource_dict["issued"] = (
+                        self._get_dict_value(resource_dict, "issued") + "T00:00:00Z"
+                    )
+                    resource_dict["modified"] = (
+                        self._get_dict_value(resource_dict, "modified") + "T00:00:00Z"
+                    )
 
                     # # License Documents
                     # license_documents = self.g.objects(distribution, DCT.license)
@@ -173,28 +181,34 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                         ("acc_gra", MOBILITYDCATAP.grammar, False),
                         ("acc_desc", MOBILITYDCATAP.dataFormatNotes, True),
                         ("acc_int", MOBILITYDCATAP.applicationLayerProtocol, False),
-                        ("acc_con", MOBILITYDCATAP.communicationMethod, False)
+                        ("acc_con", MOBILITYDCATAP.communicationMethod, False),
                     ):
-                        value = self._object_value(distribution, predicate, multilingual)
+                        value = self._object_value(
+                            distribution, predicate, multilingual
+                        )
                         if value:
                             resource_dict[key] = value
 
-                    right_ref = next(self.g.objects(URIRef(distribution_ref), DCT.rights), None)
-                    resource_dict["additional_info_access_usage_translated"] = self._object_value_multilingual(
-                        right_ref, DCT.description
+                    right_ref = next(
+                        self.g.objects(URIRef(distribution_ref), DCT.rights), None
                     )
-                    license_ref = next(self.g.objects(URIRef(distribution_ref), DCT.license), None)
-                    if license_ref:
-                        resource_dict["license_text_translated"] = self._object_value_multilingual(
-                            license_ref, DCT.description
+                    if right_ref:
+                        resource_dict["rights_types"] = self._object_value_list(
+                            right_ref, DCT.type
+                        )
+                        resource_dict["additional_info_access_usage_translated"] = (
+                            self._object_value_multilingual(right_ref, RDFS.label)
                         )
 
-                    # TODO: Hard Coded
-                    resource_dict ["conditions_access"] = 'https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/fee-required'
-                    resource_dict ["conditions_usage"] = 'https://w3id.org/mobilitydcat-ap/conditions-for-access-and-usage/licence-provided'
-                    resource_dict["license_type"] = "Other"
-
-        # dataset_dict["resources"] = []
+                    license_ref = next(
+                        self.g.objects(URIRef(distribution_ref), DCT.license), None
+                    )
+                    if license_ref:
+                        resource_dict["license_text_translated"] = (
+                            self._object_value_multilingual(
+                                license_ref, DCT.description
+                            )
+                        )
 
         return dataset_dict
 
