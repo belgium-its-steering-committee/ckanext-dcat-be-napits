@@ -102,8 +102,9 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
         self._set_dataset_value(
             dataset_dict,
             "qual_ass_translated",
-            # self._object_value_multilingual(quality_annotation_ref, OA.hasBody)
-            self._object_value_multilingual(
+            self._object_value_multilingual(quality_annotation_ref, OA.hasBody)
+            # TODO: this is a temporary fix for metadata vlaanderen
+            or self._object_value_multilingual(
                 quality_annotation_ref, URIRef("http://www.w3.org/ns/oa#hasBody")
             ),
         )
