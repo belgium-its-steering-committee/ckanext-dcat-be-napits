@@ -202,8 +202,11 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                         self.g.objects(URIRef(distribution_ref), DCT.license), None
                     )
                     if license_ref:
+                        # Prefer label, fall back to description
                         resource_dict["license_text_translated"] = (
                             self._object_value_multilingual(
+                                license_ref, RDFS.label
+                            ) or self._object_value_multilingual(
                                 license_ref, DCT.description
                             )
                         )
