@@ -94,6 +94,7 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
         for key, predicate in (
             ("publisher_firstname", FOAF.firstName),
             ("publisher_surname", FOAF.surname),
+            ("publisher_name", FOAF.name)
         ):
             value = self._object_value(publisher_ref, predicate)
             if value:
@@ -155,12 +156,12 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                     "distribution_ref"
                 ):
 
-                    resource_dict["issued"] = (
-                        self._get_dict_value(resource_dict, "issued") + "T00:00:00Z"
-                    )
-                    resource_dict["modified"] = (
-                        self._get_dict_value(resource_dict, "modified") + "T00:00:00Z"
-                    )
+                    issued = self._get_dict_value(resource_dict, "issued")
+                    if issued:
+                        resource_dict["issued"] = f"{issued}T00:00:00Z"
+                    modified = self._get_dict_value(resource_dict, "modified")
+                    if modified:
+                        resource_dict["modified"] = f"{modified}T00:00:00Z"
 
                     # # License Documents
                     # license_documents = self.g.objects(distribution, DCT.license)
