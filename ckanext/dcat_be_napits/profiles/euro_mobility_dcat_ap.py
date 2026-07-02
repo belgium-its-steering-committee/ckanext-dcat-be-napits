@@ -58,28 +58,6 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
     def parse_dataset(self, dataset_dict, dataset_ref):
         dataset_dict = super().parse_dataset(dataset_dict, dataset_ref)
 
-        # TODO: Hard Coded
-        for key, value in (
-            ("agreement_declaration_nap", ["Y"]),
-            ("cont_res", "Data set"),
-            ("countries_covered", [CONCEPT_URI_BEL]),
-            (
-                "nap_type",
-                (
-                    "MMTIS",
-                    "RTTI",
-                    "SRTI",
-                    "SSTP",
-                ),
-            ),
-            ("regions_covered", ["http://data.europa.eu/nuts/code/BE2"]),
-            (
-                "theme",
-                "http://publications.europa.eu/resource/authority/data-theme/TRAN",
-            ),
-        ):
-            self._set_dataset_value(dataset_dict, key, value)
-
         # Standard values
         for key, predicate in (
             ("frequency", DCT.accrualPeriodicity),
@@ -129,23 +107,6 @@ class EuropeanMobilityDCATAPProfile(EuropeanDCATAP2Profile):
                 quality_annotation_ref, URIRef("http://www.w3.org/ns/oa#hasBody")
             ),
         )
-
-        # [?] nap_type
-        # [X] mobility_theme
-        # [X] cont_res
-        # [ ] owner_org
-        # [X] contact_point_tel
-        # [X] publisher_firstname
-        # [X] publisher_surname
-        # [X] publisher_url
-        # [X] publisher_telephone_number
-        # [ ] countries_covered
-        # [ ] regions_covered
-        # [X] network_coverage
-        # [ ] reference_system
-        # [ ] georeferencing_method
-        # [X] fluent_tags
-        # [~] qual_ass_translated
 
         # Resources
         for distribution in self._distributions(dataset_ref):
