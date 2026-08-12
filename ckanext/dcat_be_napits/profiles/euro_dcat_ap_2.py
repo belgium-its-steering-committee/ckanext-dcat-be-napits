@@ -128,10 +128,17 @@ class EuropeanDCATAP2Profile(CkanEuropeanDCATAP2Profile):
             self.g.add((distribution_ref, DCT.rights, rights_statement))
             items =[
                 ('conditions_access', DCT.type, None, URIRef),
-                ('conditions_usage', DCT.type, None, URIRef),
                 ('additional_info_access_usage_translated', RDFS.label, None, Literal),
             ]
             self._add_triples_from_dict(resource_dict, rights_statement, items)
+            self._add_triple_from_dict(
+                resource_dict,
+                rights_statement,
+                DCT.type,
+                'conditions_usage',
+                list_value=True,
+                _type=URIRef
+            )
 
         # Fix inherited location: is bounding box, not geometry
         # TODO: make filter more specific
